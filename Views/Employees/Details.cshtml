@@ -1,0 +1,16 @@
+﻿@model OAuthMvcSample.Models.Employee
+
+@{
+    ViewData["Title"] = "Деталі співробітника";
+}
+
+<h2>@Model.FullName</h2>
+
+<ul>
+    <li><strong>Email:</strong> @Model.Email</li>
+    <li><strong>Дата прийому:</strong> @Model.HireDate</li>
+    <li><strong>Відділ:</strong> @Model.Department?.Name</li>
+    <li><strong>Посада:</strong> @Model.Position?.Name</li>
+</ul>
+
+<a asp-controller="Employees" asp-action="Index" class="btn btn-secondary">Назад до списку</a>

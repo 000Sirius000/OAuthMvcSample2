@@ -1,0 +1,38 @@
+﻿@model IEnumerable<OAuthMvcSample.Models.Employee>
+
+@{
+    ViewData["Title"] = "Співробітники";
+}
+
+<h2>Співробітники</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>ПІБ</th>
+            <th>Email</th>
+            <th>Дата прийому</th>
+            <th>Відділ</th>
+            <th>Посада</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var e in Model)
+        {
+            <tr>
+                <td>@e.FullName</td>
+                <td>@e.Email</td>
+                <td>@e.HireDate</td>
+                <td>@e.Department?.Name</td>
+                <td>@e.Position?.Name</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-controller="Employees" asp-action="Details" asp-route-id="@e.Id">
+                        Деталі
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

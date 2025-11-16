@@ -1,0 +1,32 @@
+﻿@model IEnumerable<OAuthMvcSample.Models.Position>
+
+@{
+    ViewData["Title"] = "Посади";
+}
+
+<h2>Посади</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Опис</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var p in Model)
+        {
+            <tr>
+                <td>@p.Name</td>
+                <td>@p.Description</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-controller="Positions" asp-action="Details" asp-route-id="@p.Id">
+                        Деталі
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

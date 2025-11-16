@@ -1,0 +1,10 @@
+﻿@model OAuthMvcSample.Models.Department
+
+@{
+    ViewData["Title"] = "Деталі відділу";
+}
+
+<h2>@Model.Name</h2>
+<p>@Model.Description</p>
+
+<a asp-controller="Departments" asp-action="Index" class="btn btn-secondary">Назад до списку</a>

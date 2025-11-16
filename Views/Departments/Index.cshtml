@@ -1,0 +1,32 @@
+﻿@model IEnumerable<OAuthMvcSample.Models.Department>
+
+@{
+    ViewData["Title"] = "Відділи";
+}
+
+<h2>Відділи</h2>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Назва</th>
+            <th>Опис</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var d in Model)
+        {
+            <tr>
+                <td>@d.Name</td>
+                <td>@d.Description</td>
+                <td>
+                    <a class="btn btn-sm btn-primary"
+                       asp-controller="Departments" asp-action="Details" asp-route-id="@d.Id">
+                        Деталі
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

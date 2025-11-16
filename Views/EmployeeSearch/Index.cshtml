@@ -1,0 +1,82 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+@model OAuthMvcSample.Models.EmployeeSearchViewModel
+
+@{
+    ViewData["Title"] = "Пошук співробітників";
+}
+
+<h2>Пошук співробітників</h2>
+
+<form asp-action="Index" method="post">
+
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <label class="form-label">Дата прийому з</label>
+            <input asp-for="HireDateFrom" type="datetime-local" class="form-control" />
+        </div>
+        <div class="col-md-4">
+            <label class="form-label">Дата прийому до</label>
+            <input asp-for="HireDateTo" type="datetime-local" class="form-control" />
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Відділи (список)</label>
+            <select asp-for="DepartmentIds"
+                    asp-items="@(new MultiSelectList(Model.AllDepartments, "Id", "Name"))"
+                    class="form-control" multiple>
+            </select>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Посади (список)</label>
+            <select asp-for="PositionIds"
+                    asp-items="@(new MultiSelectList(Model.AllPositions, "Id", "Name"))"
+                    class="form-control" multiple>
+            </select>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <label class="form-label">Ім'я починається з</label>
+            <input asp-for="NameStartsWith" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Ім'я закінчується на</label>
+            <input asp-for="NameEndsWith" class="form-control" />
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Шукати</button>
+</form>
+
+@if (Model.Results != null && Model.Results.Any())
+{
+    <hr />
+    <h3>Результати</h3>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>ПІБ</th>
+                <th>Email</th>
+                <th>Дата прийому</th>
+                <th>Відділ</th>
+                <th>Посада</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in Model.Results)
+            {
+                <tr>
+                    <td>@e.FullName</td>
+                    <td>@e.Email</td>
+                    <td>@e.HireDate</td>
+                    <td>@e.Department?.Name</td>
+                    <td>@e.Position?.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
