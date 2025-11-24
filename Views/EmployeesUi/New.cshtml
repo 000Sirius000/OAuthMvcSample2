@@ -1,0 +1,36 @@
+﻿@{
+    ViewData["Title"] = "Співробітники (новий інтерфейс)";
+}
+
+<h2>Співробітники (новий інтерфейс)</h2>
+
+<table class="table table-striped" id="employeesTable">
+    <thead>
+        <tr>
+            <th>ПІБ</th>
+            <th>Email</th>
+            <th>Відділ</th>
+            <th>Посада</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@section Scripts {
+    <script>
+        fetch('/api/v2/EmployeesApi')
+            .then(r => r.json())
+            .then(data => {
+                const tbody = document.querySelector('#employeesTable tbody');
+                data.forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${e.fullName}</td>
+                        <td>${e.email}</td>
+                        <td>${e.department}</td>
+                        <td>${e.position}</td>`;
+                    tbody.appendChild(tr);
+                });
+            });
+    </script>
+}

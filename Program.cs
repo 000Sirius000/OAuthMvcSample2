@@ -1,5 +1,9 @@
+using Asp.Versioning;
+using Asp.Versioning.ApiExplorer;
+using Asp.Versioning.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using OAuthMvcSample.Data;
 using OAuthMvcSample.Models;
 using OpenIddict.Abstractions;
@@ -8,14 +12,19 @@ using static OpenIddict.Abstractions.OpenIddictConstants;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// EF + SQLite
+// =========================================================
+// 1. EF + SQLite (для Identity & OpenIddict)
+// =========================================================
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
 {
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=app.db");
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")
+                        ?? "Data Source=app.db");
     options.UseOpenIddict();
 });
 
-// Доменний контекст з підтримкою 4 провайдерів
+// =========================================================
+// 2. AppDbContext — 4 провайдери БД
+// =========================================================
 var provider = builder.Configuration["Database:Provider"] ?? "Sqlite";
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -40,7 +49,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     }
 });
 
-// Identity
+// =========================================================
+// 3. Identity
+// =========================================================
 builder.Services
     .AddIdentity<ApplicationUser, IdentityRole>(opt =>
     {
@@ -61,7 +72,9 @@ builder.Services.ConfigureApplicationCookie(opt =>
     opt.AccessDeniedPath = "/Account/Login";
 });
 
-// OpenIddict (мінімальна конфігурація, яка точно є в 5.x)
+// =========================================================
+// 4. OpenIddict
+// =========================================================
 builder.Services.AddOpenIddict()
     .AddCore(opt =>
     {
@@ -75,9 +88,7 @@ builder.Services.AddOpenIddict()
 
         opt.SetAuthorizationEndpointUris("/connect/authorize")
            .SetTokenEndpointUris("/connect/token");
-        // (Userinfo та Introspection — опустимо для простоти/сумісності)
 
-        // Реєструємо скопи (включно з openid):
         opt.RegisterScopes(Scopes.OpenId, Scopes.Email, Scopes.Profile);
 
         opt.UseAspNetCore()
@@ -96,11 +107,76 @@ builder.Services.AddOpenIddict()
         opt.UseAspNetCore();
     });
 
+// =========================================================
+// 5. MVC
+// =========================================================
 builder.Services.AddControllersWithViews();
 
+
+// =========================================================
+// 6. API Versioning + Explorer
+// =========================================================
+builder.Services.AddApiVersioning(options =>
+{
+    options.DefaultApiVersion = new ApiVersion(1, 0);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+})
+.AddApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// Swagger — ОБОВ’ЯЗКОВО ДО API Versioning Explorer
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    var provider = builder.Services.BuildServiceProvider()
+        .GetRequiredService<Asp.Versioning.ApiExplorer.IApiVersionDescriptionProvider>();
+
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        options.SwaggerDoc(
+            description.GroupName,
+            new OpenApiInfo()
+            {
+                Title = $"API {description.ApiVersion}",
+                Version = description.ApiVersion.ToString()
+            });
+    }
+});
+
+// =========================================================
+// 7. Build app
+// =========================================================
 var app = builder.Build();
 
-// Авто-міграції + сидінг клієнта
+
+// =========================================================
+// 8. Swagger UI з підтримкою API Versioning
+// =========================================================
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+
+    app.UseSwaggerUI(options =>
+    {
+        var providerApi = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
+        foreach (var description in providerApi.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint(
+                $"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+    });
+}
+
+
+// =========================================================
+// 9. Авто-міграції + сидінг OpenIddict клієнта
+// =========================================================
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -108,6 +184,7 @@ using (var scope = app.Services.CreateScope())
 
     var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
     const string clientId = "mvc-client";
+
     if (await manager.FindByClientIdAsync(clientId) is null)
     {
         await manager.CreateAsync(new OpenIddictApplicationDescriptor
@@ -122,7 +199,6 @@ using (var scope = app.Services.CreateScope())
                 Permissions.Endpoints.Token,
                 Permissions.GrantTypes.AuthorizationCode,
                 Permissions.ResponseTypes.Code,
-                // Права на скопи: додаємо email/profile (для openid окремої константи в Permissions немає — це ОК)
                 Permissions.Scopes.Email,
                 Permissions.Scopes.Profile
             },
@@ -134,6 +210,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+
+// =========================================================
+// 10. Middleware pipeline
+// =========================================================
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
@@ -146,6 +226,7 @@ app.UseStaticFiles();
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
+
 
 app.MapControllerRoute(
     name: "default",

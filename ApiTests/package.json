@@ -1,0 +1,21 @@
+{
+  "name": "apitests",
+  "version": "1.0.0",
+  "description": "Integration tests for OAuthMvcSample REST API",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest --detectOpenHandles",
+    "test:sqlite": "cross-env API_URL=https://localhost:60752 jest",
+    "test:sqlserver": "cross-env API_URL=https://localhost:60752 jest",
+    "test:postgres": "cross-env API_URL=https://localhost:60752 jest",
+    "test:inmemory": "cross-env API_URL=https://localhost:60752 jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.13.2",
+    "cross-env": "^10.1.0",
+    "jest": "^29.7.0"
+  }
+}
